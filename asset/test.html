@@ -1,88 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>3D Earth with Gyro Controls</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Earth with Gyro</title>
   <style>
-    body { margin: 0; overflow: hidden; }
+    body { margin: 0; overflow: hidden; background: black; }
     canvas { display: block; }
-    #allowBtn {
-      position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 10px 20px;
-      background: white;
-      border: 1px solid #333;
-      cursor: pointer;
-      border-radius: 8px;
-      font-weight: bold;
-    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/DeviceOrientationControls.js"></script>
 </head>
 <body>
-  <button id="allowBtn">Enable Gyro</button>
-
-  <!-- Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-  <!-- DeviceOrientationControls -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/DeviceOrientationControls.js"></script>
-
   <script>
-    // Scene, Camera, Renderer
+    // Scene
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 3;
+
+    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Light
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambient);
-    const directional = new THREE.DirectionalLight(0xffffff, 1);
-    directional.position.set(5, 3, 5);
-    scene.add(directional);
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0x888888);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 3, 5);
+    scene.add(directionalLight);
 
     // Earth sphere
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load("https://threejs.org/examples/textures/earth_atmos_2048.jpg");
-    const earthGeometry = new THREE.SphereGeometry(2, 64, 64);
+    const earthTexture = textureLoader.load("https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8kearth.jpg");
+
+    const earthGeometry = new THREE.SphereGeometry(1, 64, 64);
     const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture });
     const earth = new THREE.Mesh(earthGeometry, earthMaterial);
     scene.add(earth);
 
-    camera.position.z = 6;
-
     // Gyro controls
-    let controls;
-    document.getElementById("allowBtn").addEventListener("click", () => {
-      if (typeof DeviceOrientationEvent !== "undefined" &&
-          typeof DeviceOrientationEvent.requestPermission === "function") {
-        // iOS requires permission
-        DeviceOrientationEvent.requestPermission().then(response => {
-          if (response === "granted") {
-            controls = new THREE.DeviceOrientationControls(camera);
-            document.getElementById("allowBtn").style.display = "none";
-          }
-        });
-      } else {
-        // Android auto allows
-        controls = new THREE.DeviceOrientationControls(camera);
-        document.getElementById("allowBtn").style.display = "none";
-      }
-    });
+    const controls = new THREE.DeviceOrientationControls(camera);
 
-    // Animation loop
+    // Animate
     function animate() {
       requestAnimationFrame(animate);
-      earth.rotation.y += 0.002; // Earth self-rotation
-      if (controls) controls.update();
+
+      // auto rotation
+      earth.rotation.y += 0.002;
+
+      controls.update();
       renderer.render(scene, camera);
     }
     animate();
 
-    // Resize handling
+    // Resize
     window.addEventListener("resize", () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
