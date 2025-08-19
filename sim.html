@@ -176,13 +176,7 @@ if (window.DeviceOrientationEvent) {
   controls.maxDistance = 1000;
 }
 
-// animation loop
-function animate() {
-  requestAnimationFrame(animate);
-  if (controls) controls.update();
-  renderer.render(scene, camera);
-}
-animate();
+
 
 
 // Zoom Focus on Click
@@ -208,32 +202,36 @@ controls.addEventListener('change', () => {
     }
 });
 
-// Animation loop with Saturn's Tilted Orbit
+        
 function animate() {
-    requestAnimationFrame(animate);
+  requestAnimationFrame(animate);
 
-    const time = performance.now() * 0.0001;
-    planets.forEach(planet => {
-        const angle = time * planet.speed;
-        let x = Math.cos(angle) * planet.distance;
-        let z = Math.sin(angle) * planet.distance;
-        let y = 0;
+  // planet orbits
+  const time = performance.now() * 0.0001;
+  planets.forEach(planet => {
+    const angle = time * planet.speed;
+    let x = Math.cos(angle) * planet.distance;
+    let z = Math.sin(angle) * planet.distance;
+    let y = 0;
 
-        // Apply tilt to Saturn's orbit
-        if (planet.mesh === Sat) {
-            let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
-            y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
-            z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
-        }
+    // Saturn tilt
+    if (planet.mesh === Sat) {
+      let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
+      y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
+      z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
+    }
 
-        planet.mesh.position.set(x, y, z);
-    });
+    planet.mesh.position.set(x, y, z);
+  });
 
-    controls.update();
-    renderer.render(scene, camera);
+  // controls (gyro or orbit)
+  if (controls) controls.update();
+
+  // render
+  renderer.render(scene, camera);
 }
-
 animate();
+
 
 // Handle window resize
 window.addEventListener('resize', () => {
@@ -279,6 +277,7 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
     </script>
 </body>
 </html>
+
 
 
 
