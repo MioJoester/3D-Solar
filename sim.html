@@ -144,14 +144,46 @@ Sat.add(SatRings);
 
 
 
-//3d camera + Renderer
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.enablePan = true;
-controls.screenSpacePanning = false;
-controls.minDistance = 5;
-controls.maxDistance = 1000;
+//3d camera + Renderer/ gyro controls 
+let controls;
+
+// Check if device has orientation sensor (mobile)
+if (window.DeviceOrientationEvent) {
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    DeviceOrientationEvent.requestPermission()
+      .then(response => {
+        if (response === "granted") {
+          controls = new THREE.DeviceOrientationControls(camera);
+          controls.connect();
+        } else {
+          controls = new THREE.OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+          controls.dampingFactor = 0.05;
+          controls.minDistance = 5;
+          controls.maxDistance = 1000;
+        }
+      })
+      .catch(console.error);
+  } else {
+    controls = new THREE.DeviceOrientationControls(camera);
+    controls.connect();
+  }
+} else {
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 5;
+  controls.maxDistance = 1000;
+}
+
+// animation loop
+function animate() {
+  requestAnimationFrame(animate);
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
 
 // Zoom Focus on Click
 let selectedPlanet = spaceSphere;
@@ -247,6 +279,7 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
     </script>
 </body>
 </html>
+
 
 
 
