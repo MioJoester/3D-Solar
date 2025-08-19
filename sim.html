@@ -34,11 +34,29 @@
 
 
 // Scene setup
+// Scene setup
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // ✅ makes it crisp on high-DPI screens
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+
+// Handle resizing (desktop + mobile)
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+
 
 // Lighting setup
 const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -224,4 +242,5 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
     </script>
 </body>
 </html>
+
 
