@@ -1,0 +1,25 @@
+{
+    "name": "Orbit Engine",
+    "short_name": "Orbit Engine",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#000000",
+    "description": "3d solar system simulation ",
+    "icons": [
+        {
+            "src": "./asset/logo.jpg",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./asset/logo.jpg",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "orientation": "portrait"
+}
