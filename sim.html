@@ -6,7 +6,8 @@
     <title>3D Solar System Simulation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/DeviceOrientationControls.js"></script>
+
 
       <script defer src="/_vercel/insights/script.js"></script>
 
@@ -239,9 +240,23 @@ function createOrbit(radius, tilt = 0) {
 planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
 
 
+//gyroscrope/accelerometer controls 
+// after setting up camera + scene
+const controls = new THREE.DeviceOrientationControls(camera);
+
+// animation loop
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update(); // 🔑 this makes camera follow phone gyro
+  renderer.render(scene, camera);
+}
+animate();
+
+
     </script>
 </body>
 </html>
+
 
 
 
