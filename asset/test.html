@@ -1,3 +1,40 @@
-<html>
-  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gyro Earth</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: black;
+    }
+    .earth {
+      width: 200px;
+      height: 200px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg') no-repeat;
+      background-size: cover;
+      border-radius: 50%;
+      transform-style: preserve-3d;
+      transition: transform 0.1s linear;
+    }
+  </style>
+</head>
+<body>
+  <div class="earth"></div>
+
+  <script>
+    const earth = document.querySelector('.earth');
+
+    window.addEventListener("deviceorientation", (event) => {
+      const { alpha, beta, gamma } = event; 
+      // alpha = compass direction, beta = front/back tilt, gamma = left/right tilt
+      earth.style.transform = `rotateY(${alpha}deg) rotateX(${beta}deg) rotateZ(${gamma}deg)`;
+    });
+  </script>
+</body>
 </html>
