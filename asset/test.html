@@ -3,38 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gyro Earth</title>
+  <title>Gyro Sphere</title>
   <style>
     body {
       margin: 0;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       height: 100vh;
       background: black;
+      overflow: hidden;
     }
-    .earth {
-      width: 200px;
-      height: 200px;
-      background: url('https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg') no-repeat;
-      background-size: cover;
+
+    .sphere {
+      width: 300px;
+      height: 300px;
       border-radius: 50%;
+      background: url("https://upload.wikimedia.org/wikipedia/commons/8/80/Equirectangular_projection_SW.jpg");
+      background-size: cover;
       transform-style: preserve-3d;
+      box-shadow: inset -40px -20px 80px rgba(0, 0, 0, 0.7);
       transition: transform 0.1s linear;
     }
   </style>
 </head>
 <body>
-  <div class="earth"></div>
+  <div class="sphere" id="sphere"></div>
 
   <script>
-    const earth = document.querySelector('.earth');
+    const sphere = document.getElementById("sphere");
 
-    window.addEventListener("deviceorientation", (event) => {
-      const { alpha, beta, gamma } = event; 
-      // alpha = compass direction, beta = front/back tilt, gamma = left/right tilt
-      earth.style.transform = `rotateY(${alpha}deg) rotateX(${beta}deg) rotateZ(${gamma}deg)`;
+    // Fallback for desktops (mouse move rotates sphere)
+    document.addEventListener("mousemove", (e) => {
+      let x = (e.clientY / window.innerHeight - 0.5) * 180; // up-down tilt
+      let y = (e.clientX / window.innerWidth - 0.5) * 360;  // left-right spin
+      sphere.style.transform = `rotateX(${-x}deg) rotateY(${y}deg)`;
     });
+
+    // Mobile gyroscope controls
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", (event) => {
+        let x = event.beta || 0;   // up-down tilt (-180 to 180)
+        let y = event.gamma || 0;  // left-right tilt (-90 to 90)
+        sphere.style.transform = `rotateX(${x}deg) rotateY(${y * 2}deg)`;
+      });
+    }
   </script>
 </body>
 </html>
