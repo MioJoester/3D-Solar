@@ -6,33 +6,42 @@
   <title>3D Solar System Simulation</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 </head>
-<body class="bg-white text-gray-800 flex flex-col min-h-screen">
+<body class="bg-black text-gray-200 flex flex-col min-h-screen relative overflow-hidden">
+
+  <!-- Particles Background -->
+  <div id="particles-js" class="absolute inset-0 -z-10"></div>
 
   <!-- Hero Section -->
-  <header class="flex flex-col items-center justify-center text-center py-20 px-6 bg-gradient-to-b from-gray-100 to-white">
-    <h1 class="text-5xl font-bold mb-6">🌌 3D Solar System Simulation</h1>
-    <p class="text-lg max-w-2xl mb-6">
-      An interactive solar system built with <span class="font-semibold text-blue-600">Three.js</span>, featuring smooth performance and realistic physics.
-    </p>
-    <a href="sim.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition">
-      Launch Simulation
-    </a>
+  <header class="flex flex-col md:flex-row items-center justify-center text-center md:text-left py-20 px-6 bg-transparent relative z-10">
+    <div class="max-w-xl">
+      <h1 class="text-5xl font-bold mb-6">🌌 3D Solar System Simulation</h1>
+      <p class="text-lg mb-6">
+        Explore the solar system in real-time, powered by <span class="font-semibold text-blue-400">Three.js</span>.
+      </p>
+      <a href="sim.html" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg font-semibold transition">
+        Launch Simulation
+      </a>
+    </div>
+    <!-- 3D Earth Container -->
+    <div id="earth-container" class="w-[350px] h-[350px] md:ml-12 mt-10 md:mt-0"></div>
   </header>
 
   <!-- Features Section -->
-  <section class="py-16 px-6 bg-gray-50">
+  <section class="py-16 px-6 bg-gray-900/60 relative z-10">
     <h2 class="text-3xl font-bold text-center mb-10">Features</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
-      <div class="bg-white shadow-md p-6 rounded-xl">
+      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
         <h3 class="text-xl font-semibold mb-2">⚡ Smooth Framerate</h3>
         <p>Optimized rendering ensures a stable <strong>60 FPS</strong> experience.</p>
       </div>
-      <div class="bg-white shadow-md p-6 rounded-xl">
+      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
         <h3 class="text-xl font-semibold mb-2">🌍 Realistic Physics</h3>
         <p>Accurate orbital mechanics and gravity-based movement.</p>
       </div>
-      <div class="bg-white shadow-md p-6 rounded-xl">
+      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
         <h3 class="text-xl font-semibold mb-2">🪐 Realistic Textures</h3>
         <p>High-quality planet textures for immersive exploration.</p>
       </div>
@@ -40,12 +49,64 @@
   </section>
 
   <!-- Footer -->
-  <footer class="mt-auto py-6 bg-gray-900 text-gray-300 flex justify-center items-center space-x-4">
+  <footer class="mt-auto py-6 bg-gray-950 text-gray-400 flex justify-center items-center space-x-4 relative z-10">
     <p class="text-sm">© 2025 3D Solar System Simulation</p>
-    <a href="https://github.com/your-username/your-repo" target="_blank" class="text-gray-300 hover:text-white text-xl">
+    <a href="https://github.com/your-username/your-repo" target="_blank" class="text-gray-400 hover:text-white text-xl">
       <i class="fab fa-github"></i>
     </a>
   </footer>
 
+  <!-- Particles Config -->
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": { "value": 150 },
+        "size": { "value": 2 },
+        "move": { "speed": 0.5 },
+        "line_linked": { "enable": false },
+        "color": { "value": "#ffffff" }
+      }
+    });
+  </script>
+
+  <!-- Three.js Rotating Earth -->
+  <script>
+    const container = document.getElementById("earth-container");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    // Earth Geometry
+    const textureLoader = new THREE.TextureLoader();
+    const earthTexture = textureLoader.load("https://threejs.org/examples/textures/earth_atmos_2048.jpg");
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(2, 64, 64),
+      new THREE.MeshStandardMaterial({ map: earthTexture })
+    );
+    scene.add(earth);
+
+    // Lights
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(5, 3, 5);
+    scene.add(light);
+
+    camera.position.z = 6;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      earth.rotation.y += 0.002; // slow rotation
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Responsiveness
+    window.addEventListener("resize", () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+  </script>
 </body>
-</html>
+</htm
