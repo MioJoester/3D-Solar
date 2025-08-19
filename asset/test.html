@@ -120,7 +120,7 @@ const planetData = [
     { name: "Earth", texture: "h.jpg", size: 0, distance: 26, speed: 10 },
     { name: "Mars", texture: "s.jpg", size: 0.0, distance: 36.4, speed: 8 },
     { name: "Jupiter", texture: "r.jpg", size: 0.0, distance: 141, speed: 4 },
-    { name: "Saturn", texture: "n.jpg", size: 0.0, distance: 181, speed: 3, tilt: 5 }
+    { name: "Saturn", texture: "8k_moon.jpg", size: 2.0, distance: 181, speed: 3, tilt: 5 }
 ];
 
 planetData.forEach(data => {
@@ -131,15 +131,6 @@ planetData.forEach(data => {
 });
 
 
-
-
-const Sat = planets.find(p => p.distance === 181).mesh; 
-const ringTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_saturn_ring_alpha.png');
-const ringGeometry = new THREE.RingGeometry(3, 5, 128);
-const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, side: THREE.DoubleSide, transparent: true, alphaTest: 0.5 });
-const SatRings = new THREE.Mesh(ringGeometry, ringMaterial);
-SatRings.rotation.x = -Math.PI / 2;
-Sat.add(SatRings);
 
 
 
