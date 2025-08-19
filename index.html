@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolarSystem Pro - 3D Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0a 50%),
+                radial-gradient(ellipse at bottom, #16213e 0%, #0a0a0a 50%);
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .title {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #a0a0a0;
+            letter-spacing: 0.1em;
+        }
+
+        .cta-button {
+            position: relative;
+            padding: 1.5rem 4rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099ff 100%);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 5px 30px rgba(0, 212, 255, 0.4);
+            overflow: hidden;
+            animation: pulse 2s infinite;
+            margin-bottom: 4rem;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(0, 212, 255, 0.6);
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .cta-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 5px 30px rgba(0, 212, 255, 0.4);
+            }
+            50% {
+                box-shadow: 0 5px 40px rgba(0, 212, 255, 0.8);
+            }
+            100% {
+                box-shadow: 0 5px 30px rgba(0, 212, 255, 0.4);
+            }
+        }
+
+        .description {
+            max-width: 800px;
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeIn 1.5s ease-out;
+        }
+
+        .description h3 {
+            font-size: 2rem;
+            color: #00d4ff;
+            margin-bottom: 1.5rem;
+        }
+
+        .description p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #c0c0c0;
+            margin-bottom: 1rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .tech-item {
+            padding: 0.5rem 1.5rem;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 25px;
+            font-size: 1rem;
+            color: #00d4ff;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .github-link {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .github-link:hover {
+            transform: scale(1.1);
+        }
+
+        .github-icon {
+            width: 50px;
+            height: 50px;
+            fill: #00d4ff;
+            transition: fill 0.3s ease;
+        }
+
+        .github-link:hover .github-icon {
+            fill: #0099ff;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .cta-button {
+                padding: 1.2rem 3rem;
+                font-size: 1.1rem;
+            }
+            
+            .description {
+                padding: 0 1rem;
+            }
+            
+            .description h3 {
+                font-size: 1.5rem;
+            }
+            
+            .description p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1 class="title">SolarSystem Pro</h1>
+            <p class="subtitle">Interactive 3D Celestial Simulation</p>
+        </div>
+        
+        <a href="sim.html" class="cta-button" onclick="launchSimulation()">
+            <span>Launch Simulation</span>
+        </a>
+        
+        <div class="description">
+            <h3>Experience the Universe Like Never Before</h3>
+            <p>
+                Our cutting-edge 3D solar system simulation harnesses the power of Three.js to deliver 
+                breathtakingly realistic visuals at 60 FPS. Every celestial body follows authentic orbital 
+                mechanics calculated using Newton's law of universal gravitation: F = G × (m₁ × m₂) / r².
+            </p>
+            <p>
+                Watch planets orbit in real-time, witness gravitational interactions, and explore the cosmos 
+                with scientifically accurate physics. From Mercury's swift 88-day orbit to Neptune's 
+                leisurely 165-year journey, experience the dance of our solar system in stunning detail.
+            </p>
+            <div class="tech-stack">
+                <span class="tech-item">Three.js</span>
+                <span class="tech-item">WebGL 2.0</span>
+                <span class="tech-item">Real Physics</span>
+                <span class="tech-item">60 FPS</span>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="footer">
+        <a href="https://github.com/yourusername/solar-system-sim" class="github-link" target="_blank" rel="noopener noreferrer">
+            <svg class="github-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+        </a>
+    </footer>
+
+    <script>
+        // Create animated stars background
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 200;
+            
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        function launchSimulation() {
+            // Add click animation
+            const button = event.target;
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = '';
+                // Here you would typically redirect to the simulation
+                
+            }, 150);
+        }
+        
+        // Initialize stars on page load
+        createStars();
+        
+        // Add parallax effect on mouse move
+        document.addEventListener('mousemove', (e) => {
+            const stars = document.querySelectorAll('.star');
+            const mouseX = e.clientX / window.innerWidth;
+            const mouseY = e.clientY / window.innerHeight;
+            
+            stars.forEach((star, index) => {
+                const speed = (index % 3 + 1) * 0.5;
+                const x = (mouseX - 0.5) * speed;
+                const y = (mouseY - 0.5) * speed;
+                star.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        });
+    </script>
+</body>
+</html>
