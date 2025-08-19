@@ -9,13 +9,13 @@
     "description": "3d solar system simulation ",
     "icons": [
         {
-            "src": "./asset/logo.jpg",
+            "src": "./asset/ORBIT.jpg",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "./asset/logo.jpg",
+            "src": "./asset/ORBIT.jpg",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"
