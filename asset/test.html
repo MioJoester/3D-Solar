@@ -210,6 +210,36 @@ window.addEventListener('resize', () => {
 });
 
 
+        // Function to create an orbit path
+function createOrbit(radius, tilt = 0) {
+    const orbitGeometry = new THREE.BufferGeometry();
+    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+    const points = [];
+    for (let i = 0; i <= 128; i++) {
+        const angle = (i / 128) * Math.PI * 2;
+        let x = Math.cos(angle) * radius;
+        let z = Math.sin(angle) * radius;
+        let y = 0;
+
+        if (tilt !== 0) {
+            let tiltRad = THREE.MathUtils.degToRad(tilt);
+            y = Math.sin(angle) * radius * Math.sin(tiltRad);
+            z = Math.sin(angle) * radius * Math.cos(tiltRad);
+        }
+
+        points.push(new THREE.Vector3(x, y, z));
+    }
+
+    orbitGeometry.setFromPoints(points);
+    const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
+    scene.add(orbit);
+}
+
+// Create orbits for all planets
+planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
+
+
     </script>
 </body>
 </html>
