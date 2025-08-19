@@ -1,72 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Earth with Controls</title>
-  <style>
-    body { margin: 0; overflow: hidden; background: black; }
-    canvas { display: block; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Solar System Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+    
+
+      <script defer src="/_vercel/insights/script.js"></script>
+
+
+    
+
+
 </head>
-<body>
-<script>
-  // Scene, Camera, Renderer
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 0, 3);
+<body style="margin: 0; overflow: hidden;">
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+
+
+    
+    
+
+
+    <script type="module">
+    
+
+
+    
+    
+
+
+
+// Scene setup
+// Scene setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  3000
+);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // ✅ makes it crisp on high-DPI screens
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Handle resizing (desktop + mobile)
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
   renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
 
-  // Orbit Controls (zoom + rotate with touch/mouse)
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.enablePan = false;
 
-  // Earth
-  const textureLoader = new THREE.TextureLoader();
-  const earthTexture = textureLoader.load("https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8kearth.jpg");
-  const earthGeometry = new THREE.SphereGeometry(1, 64, 64);
-  const earthMaterial = new THREE.MeshPhongMaterial({ map: earthTexture });
-  const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-  scene.add(earth);
+// Lighting setup
+const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+scene.add(ambientLight);
+const sunLight = new THREE.PointLight(0xffffff, 2, 100);
+sunLight.position.set(0, 0, 0);
+scene.add(sunLight);
 
-  // Lighting
-  const ambientLight = new THREE.AmbientLight(0x333333);
-  scene.add(ambientLight);
+// Load Textures
+const textureLoader = new THREE.TextureLoader();
+const sunTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8kearth.jpg');
+const spaceTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_milkyway.jpg');
+const asteroidTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Asteroid_243_Ida.jpg/640px-Asteroid_243_Ida.jpg');
 
-  const pointLight = new THREE.PointLight(0xffffff, 1);
-  pointLight.position.set(5, 3, 5);
-  scene.add(pointLight);
+// Create Sun
+const sunMaterial = new THREE.MeshStandardMaterial({ map: sunTexture, emissiveIntensity: 7 });
+const sunGeometry = new THREE.SphereGeometry(9, 64, 64);
+const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+scene.add(sun);
 
-  // Background Dome (Stars)
-  const starsTexture = textureLoader.load("https://cdn.jsdelivr.net/gh/mrdoob/three.js@master/examples/textures/space.jpg");
-  const starsGeometry = new THREE.SphereGeometry(50, 64, 64);
-  const starsMaterial = new THREE.MeshBasicMaterial({ map: starsTexture, side: THREE.BackSide });
-  const starDome = new THREE.Mesh(starsGeometry, starsMaterial);
-  scene.add(starDome);
+// Background Space
+const spaceGeometry = new THREE.SphereGeometry(500, 128, 128);
+const spaceMaterial = new THREE.MeshBasicMaterial({ map: spaceTexture, side: THREE.BackSide });
+const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
+scene.add(spaceSphere);
 
-  // Animation
-  function animate() {
+// Asteroid Belt
+const asteroids = [];
+function createAsteroidBelt() {
+    const asteroidCount = 300;
+    const innerRadius = 80;
+    const outerRadius = 30;
+
+    for (let i = 0; i < asteroidCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const distance = innerRadius + Math.random() * (outerRadius - innerRadius);
+        const size = Math.random() * 0.5 + 0.1;
+
+        const asteroidGeometry = new THREE.SphereGeometry(size, 16, 16);
+        const asteroidMaterial = new THREE.MeshStandardMaterial({ map: asteroidTexture });
+
+        const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+        asteroid.position.set(
+            Math.cos(angle) * distance,
+            (Math.random() - 0.5) * 2,
+            Math.sin(angle) * distance
+        );
+
+        asteroids.push(asteroid);
+        scene.add(asteroid);
+    }
+}
+createAsteroidBelt();
+
+// Planets Data
+const planets = [];
+
+const planetData = [
+    { name: "Mercury", texture: "8k_mercury.jpg", size: 0.38, distance: 10.8, speed: 20 }
+];
+
+planetData.forEach(data => {
+    const texture = textureLoader.load(`https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/${data.texture}`);
+    const planet = new THREE.Mesh(new THREE.SphereGeometry(data.size, 64, 64), new THREE.MeshStandardMaterial({ map: texture }));
+    scene.add(planet);
+    planets.push({ mesh: planet, distance: data.distance, speed: data.speed, tilt: data.tilt || 0 });
+});
+
+
+
+
+const Sat = planets.find(p => p.distance === 181).mesh; 
+const ringTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_saturn_ring_alpha.png');
+const ringGeometry = new THREE.RingGeometry(3, 5, 128);
+const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, side: THREE.DoubleSide, transparent: true, alphaTest: 0.5 });
+const SatRings = new THREE.Mesh(ringGeometry, ringMaterial);
+SatRings.rotation.x = -Math.PI / 2;
+Sat.add(SatRings);
+
+
+
+//3d camera + Renderer
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.enablePan = true;
+controls.screenSpacePanning = false;
+controls.minDistance = 5;
+controls.maxDistance = 1000;
+
+// Zoom Focus on Click
+let selectedPlanet = spaceSphere;
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+window.addEventListener('click', (event) => {3
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+
+    if (intersects.length > 0) {
+        selectedPlanet = intersects[0].object;
+        controls.target.copy(selectedPlanet.position);
+    }
+});
+
+controls.addEventListener('change', () => {
+    if (selectedPlanet) {
+        controls.target.copy(selectedPlanet.position);
+    }
+});
+
+// Animation loop with Saturn's Tilted Orbit
+function animate() {
     requestAnimationFrame(animate);
 
-    earth.rotation.y += 0.001; // slow spin
+    const time = performance.now() * 0.0001;
+    planets.forEach(planet => {
+        const angle = time * planet.speed;
+        let x = Math.cos(angle) * planet.distance;
+        let z = Math.sin(angle) * planet.distance;
+        let y = 0;
+
+        // Apply tilt to Saturn's orbit
+        if (planet.mesh === Sat) {
+            let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
+            y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
+            z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
+        }
+
+        planet.mesh.position.set(x, y, z);
+    });
+
     controls.update();
     renderer.render(scene, camera);
-  }
+}
 
-  animate();
+animate();
 
-  // Handle resizing
-  window.addEventListener("resize", () => {
+// Handle window resize
+window.addEventListener('resize', () => {
+    renderer.setSize(window.innerWidth, window.innerHeight);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-</script>
+});
+
+// Function to create an orbit path
+function createOrbit(radius, tilt = 0) {
+    const orbitGeometry = new THREE.BufferGeometry();
+    const orbitMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+    const points = [];
+    for (let i = 0; i <= 128; i++) {
+        const angle = (i / 128) * Math.PI * 2;
+        let x = Math.cos(angle) * radius;
+        let z = Math.sin(angle) * radius;
+        let y = 0;
+
+        if (tilt !== 0) {
+            let tiltRad = THREE.MathUtils.degToRad(tilt);
+            y = Math.sin(angle) * radius * Math.sin(tiltRad);
+            z = Math.sin(angle) * radius * Math.cos(tiltRad);
+        }
+
+        points.push(new THREE.Vector3(x, y, z));
+    }
+
+    orbitGeometry.setFromPoints(points);
+    const orbit = new THREE.Line(orbitGeometry, orbitMaterial);
+    scene.add(orbit);
+}
+
+// Create orbits for all planets
+planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
+
+
+    </script>
 </body>
 </html>
+
+
+
+
