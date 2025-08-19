@@ -242,20 +242,12 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
 
 //gyroscrope/accelerometer controls 
 // after setting up camera + scene
-const controls = new THREE.DeviceOrientationControls(camera);
-
-// animation loop
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update(); // 🔑 this makes camera follow phone gyro
-  renderer.render(scene, camera);
-}
-animate();
 
 
     </script>
 </body>
 </html>
+
 
 
 
