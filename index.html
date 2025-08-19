@@ -17,7 +17,7 @@
   <!-- Hero Section -->
   <header class="flex flex-col md:flex-row items-center justify-center text-center md:text-left py-20 px-6 bg-transparent relative z-10">
     <div class="max-w-xl">
-      <h1 class="text-5xl font-bold mb-6">🌌 3D Solar System Simulation</h1>
+      <h1 class="text-5xl font-bold mb-6">3D Solar System Simulation</h1>
       <p class="text-lg mb-6">
         Explore the solar system in real-time, powered by <span class="font-semibold text-blue-400">Three.js</span>.
       </p>
@@ -30,23 +30,7 @@
   </header>
 
   <!-- Features Section -->
-  <section class="py-16 px-6 bg-gray-900/60 relative z-10">
-    <h2 class="text-3xl font-bold text-center mb-10">Features</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto text-center">
-      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
-        <h3 class="text-xl font-semibold mb-2">⚡ Smooth Framerate</h3>
-        <p>Optimized rendering ensures a stable <strong>60 FPS</strong> experience.</p>
-      </div>
-      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
-        <h3 class="text-xl font-semibold mb-2">🌍 Realistic Physics</h3>
-        <p>Accurate orbital mechanics and gravity-based movement.</p>
-      </div>
-      <div class="bg-gray-800 shadow-md p-6 rounded-xl">
-        <h3 class="text-xl font-semibold mb-2">🪐 Realistic Textures</h3>
-        <p>High-quality planet textures for immersive exploration.</p>
-      </div>
-    </div>
-  </section>
+  
 
   <!-- Footer -->
   <footer class="mt-auto py-6 bg-gray-950 text-gray-400 flex justify-center items-center space-x-4 relative z-10">
@@ -58,14 +42,54 @@
 
   <!-- Particles Config -->
   <script>
-    particlesJS("particles-js", {
+      particlesJS("particles-js", {
       "particles": {
-        "number": { "value": 150 },
-        "size": { "value": 2 },
-        "move": { "speed": 0.5 },
-        "line_linked": { "enable": false },
-        "color": { "value": "#ffffff" }
-      }
+        "number": {
+          "value": 30,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": { "value": "#000000" },
+        "shape": {
+          "type": "star",
+          "stroke": { "width": 0, "color": "#000000" }
+        },
+        "opacity": {
+          "value": 0.9,
+          "random": true,
+          "anim": {
+            "enable": false
+          }
+        },
+        "size": {
+          "value": 3,
+          "random": true
+        },
+        "line_linked": {
+          "enable": false,
+          "distance": 150,
+          "color": "#000000",
+          "opacity": 0.2,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 1.5,
+          "direction": "left",
+          "out_mode": "out"
+        }
+      },
+      "interactivity": {
+        "events": {
+          "onhover": {
+            "enable": false,
+            "mode": "repulse"
+          }
+        }
+      },
+      "retina_detect": true
     });
   </script>
 
@@ -80,7 +104,7 @@
 
     // Earth Geometry
     const textureLoader = new THREE.TextureLoader();
-    const earthTexture = textureLoader.load("https://threejs.org/examples/textures/earth_atmos_2048.jpg");
+    const earthTexture = textureLoader.load("https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8kearth.jpg");
     const earth = new THREE.Mesh(
       new THREE.SphereGeometry(2, 64, 64),
       new THREE.MeshStandardMaterial({ map: earthTexture })
