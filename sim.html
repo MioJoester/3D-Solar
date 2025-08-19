@@ -6,8 +6,7 @@
     <title>3D Solar System Simulation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/controls/DeviceOrientationControls.js"></script>
-
+    
 
       <script defer src="/_vercel/insights/script.js"></script>
 
@@ -121,7 +120,7 @@ const planetData = [
     { name: "Earth", texture: "8kearth.jpg", size: 1, distance: 26, speed: 10 },
     { name: "Mars", texture: "8k_mars.jpg", size: 0.53, distance: 36.4, speed: 8 },
     { name: "Jupiter", texture: "8k_jupiter.jpg", size: 3.5, distance: 141, speed: 4 },
-    { name: "Saturn", texture: "8k_saturn.jpg", size: 2.9, distance: 181, speed: 3, tilt: 8 }
+    { name: "Saturn", texture: "8k_saturn.jpg", size: 2.9, distance: 181, speed: 3, tilt: 5 }
 ];
 
 planetData.forEach(data => {
@@ -144,40 +143,14 @@ Sat.add(SatRings);
 
 
 
-//3d camera + Renderer/ gyro controls 
-let controls;
-
-// Check if device has orientation sensor (mobile)
-if (window.DeviceOrientationEvent) {
-  if (typeof DeviceOrientationEvent.requestPermission === "function") {
-    DeviceOrientationEvent.requestPermission()
-      .then(response => {
-        if (response === "granted") {
-          controls = new THREE.DeviceOrientationControls(camera);
-          controls.connect();
-        } else {
-          controls = new THREE.OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
-          controls.dampingFactor = 0.05;
-          controls.minDistance = 5;
-          controls.maxDistance = 1000;
-        }
-      })
-      .catch(console.error);
-  } else {
-    controls = new THREE.DeviceOrientationControls(camera);
-    controls.connect();
-  }
-} else {
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.minDistance = 5;
-  controls.maxDistance = 1000;
-}
-
-
-
+//3d camera + Renderer
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.enablePan = true;
+controls.screenSpacePanning = false;
+controls.minDistance = 5;
+controls.maxDistance = 1000;
 
 // Zoom Focus on Click
 let selectedPlanet = spaceSphere;
@@ -202,36 +175,32 @@ controls.addEventListener('change', () => {
     }
 });
 
-        
+// Animation loop with Saturn's Tilted Orbit
 function animate() {
-  requestAnimationFrame(animate);
+    requestAnimationFrame(animate);
 
-  // planet orbits
-  const time = performance.now() * 0.0001;
-  planets.forEach(planet => {
-    const angle = time * planet.speed;
-    let x = Math.cos(angle) * planet.distance;
-    let z = Math.sin(angle) * planet.distance;
-    let y = 0;
+    const time = performance.now() * 0.0001;
+    planets.forEach(planet => {
+        const angle = time * planet.speed;
+        let x = Math.cos(angle) * planet.distance;
+        let z = Math.sin(angle) * planet.distance;
+        let y = 0;
 
-    // Saturn tilt
-    if (planet.mesh === Sat) {
-      let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
-      y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
-      z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
-    }
+        // Apply tilt to Saturn's orbit
+        if (planet.mesh === Sat) {
+            let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
+            y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
+            z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
+        }
 
-    planet.mesh.position.set(x, y, z);
-  });
+        planet.mesh.position.set(x, y, z);
+    });
 
-  // controls (gyro or orbit)
-  if (controls) controls.update();
-
-  // render
-  renderer.render(scene, camera);
+    controls.update();
+    renderer.render(scene, camera);
 }
-animate();
 
+animate();
 
 // Handle window resize
 window.addEventListener('resize', () => {
@@ -270,19 +239,9 @@ function createOrbit(radius, tilt = 0) {
 planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
 
 
-//gyroscrope/accelerometer controls 
-// after setting up camera + scene
-
-
     </script>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
