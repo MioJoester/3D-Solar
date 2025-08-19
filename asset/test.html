@@ -1,40 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Gyro Test</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Earth with Gyro</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    canvas { display: block; }
+    #startBtn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      padding: 10px 20px;
+      background: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+  </style>
 </head>
-<body style="text-align:center; font-family:sans-serif; margin-top:50px;">
-  <h2>Gyro Test</h2>
-  <p id="output">Waiting for data...</p>
+<body>
   <button id="startBtn">Enable Gyro</button>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/DeviceOrientationControls.js"></script>
 
   <script>
-    const output = document.getElementById("output");
-    const startBtn = document.getElementById("startBtn");
+    let scene, camera, renderer, earth, controls;
 
-    function handleOrientation(event) {
-      output.textContent = `Alpha: ${event.alpha} | Beta: ${event.beta} | Gamma: ${event.gamma}`;
+    init();
+    animate();
+
+    function init() {
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        10000
+      );
+      camera.position.set(0, 0, 3);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // Earth
+      const textureLoader = new THREE.TextureLoader();
+      const earthTexture = textureLoader.load("https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8kearth.jpg");
+      const geometry = new THREE.SphereGeometry(1, 64, 64);
+      const material = new THREE.MeshStandardMaterial({ map: earthTexture });
+      earth = new THREE.Mesh(geometry, material);
+      scene.add(earth);
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 3, 5);
+      scene.add(directionalLight);
+
+      // Resize handling
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // Default rotation (in case gyro not working)
+      controls = null;
     }
 
-    function startListening() {
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS Safari
-        DeviceOrientationEvent.requestPermission()
-          .then(permissionState => {
-            if (permissionState === 'granted') {
-              window.addEventListener("deviceorientation", handleOrientation);
-              startBtn.style.display = "none";
-            }
-          })
-          .catch(console.error);
+    function enableGyro() {
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        // iOS
+        DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === "granted") {
+            controls = new THREE.DeviceOrientationControls(camera);
+          } else {
+            alert("Permission denied!");
+          }
+        }).catch(console.error);
       } else {
-        // Android / other browsers
-        window.addEventListener("deviceorientation", handleOrientation);
-        startBtn.style.display = "none";
+        // Android
+        controls = new THREE.DeviceOrientationControls(camera);
       }
     }
 
-    startBtn.addEventListener("click", startListening);
+    document.getElementById("startBtn").addEventListener("click", enableGyro);
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (controls) {
+        controls.update();
+      } else {
+        // fallback rotation
+        earth.rotation.y += 0.002;
+      }
+
+      renderer.render(scene, camera);
+    }
   </script>
 </body>
 </html>
