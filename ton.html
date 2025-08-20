@@ -1,98 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Black Hole Simulation</title>
+  <meta charset="utf-8" />
+  <title>Black Hole with Gravitational Lensing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { margin: 0; overflow: hidden; background: black; }
-    canvas { display: block; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+    canvas { 
+      display: block; 
+    }
+    .ui-container {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 320px;
+    }
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+      color: #4fc3f7;
+    }
+    .slider-container {
+      margin: 10px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .info {
+      font-size: 13px;
+      margin-top: 15px;
+      color: #bbb;
+    }
+    .instructions {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      color: white;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 250px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+  <div class="instructions">
+    <h3>Controls</h3>
+    <p>• Drag to rotate view<br>• Scroll to zoom<br>• Use sliders to adjust effects</p>
+  </div>
+  
+  <div class="ui-container">
+    <h1>Black Hole Gravitational Lensing</h1>
+    
+    <div class="slider-container">
+      <label for="bendStrength">Lensing Strength: <span id="bendStrengthValue">0.008</span></label>
+      <input type="range" id="bendStrength" min="0.001" max="0.03" step="0.001" value="0.008">
+    </div>
+    
+    <div class="slider-container">
+      <label for="ringIntensity">Einstein Ring Intensity: <span id="ringIntensityValue">1.25</span></label>
+      <input type="range" id="ringIntensity" min="0.5" max="3.0" step="0.1" value="1.25">
+    </div>
+    
+    <div class="slider-container">
+      <label for="diskIntensity">Accretion Disk Intensity: <span id="diskIntensityValue">0.85</span></label>
+      <input type="range" id="diskIntensity" min="0.1" max="2.0" step="0.1" value="0.85">
+    </div>
+    
+    <div class="info">
+      This simulation shows how a black hole's gravity bends light from background stars, creating distortion effects.
+    </div>
+  </div>
+
+  <!-- Three.js + OrbitControls -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+
   <script>
-    // Scene
-    const scene = new THREE.Scene();
-
-    // Camera
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(0, 50, 200);
-
+    // ------------------------
     // Renderer
+    // ------------------------
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     document.body.appendChild(renderer.domElement);
 
-    // Orbit Controls
+    // ------------------------
+    // Scene & Camera
+    // ------------------------
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 20000);
+    camera.position.set(0, 0, 300);
+
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.enablePan = true;
-    controls.enableZoom = true;
     controls.minDistance = 50;
-    controls.maxDistance = 1000;
+    controls.maxDistance = 2000;
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
+    // ------------------------
+    // Background (Milky Way dome)
+    // ------------------------
+    const loader = new THREE.TextureLoader();
+    // Using a different Milky Way texture that's available
+    const milkyWay = loader.load("https://cdn.jsdelivr.net/gh/RenaudRohlinger/three-galaxy@main/textures/milkyway.jpg");
+    milkyWay.colorSpace = THREE.SRGBColorSpace;
+    milkyWay.wrapS = THREE.RepeatWrapping;
+    milkyWay.wrapT = THREE.ClampToEdgeWrapping;
 
-    const pointLight = new THREE.PointLight(0xffffff, 2, 2000);
-    pointLight.position.set(200, 200, 200);
-    scene.add(pointLight);
+    const skyGeo = new THREE.SphereGeometry(5000, 64, 64);
+    const skyMat = new THREE.MeshBasicMaterial({ map: milkyWay, side: THREE.BackSide });
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
 
-    // Black Hole (dark sphere)
-    const blackHoleGeometry = new THREE.SphereGeometry(20, 64, 64);
-    const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
+    // Add some stars for better effect
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 5000;
+    const starPositions = new Float32Array(starCount * 3);
+    
+    for (let i = 0; i < starCount * 3; i += 3) {
+      const radius = 2000 + Math.random() * 3000;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      
+      starPositions[i] = radius * Math.sin(phi) * Math.cos(theta);
+      starPositions[i + 1] = radius * Math.sin(phi) * Math.sin(theta);
+      starPositions[i + 2] = radius * Math.cos(phi);
+    }
+    
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    const starMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 2,
+      sizeAttenuation: true
+    });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+
+    // ------------------------
+    // Black hole core (dark sphere)
+    // ------------------------
+    const blackHoleRadius = 20;
+    const blackHole = new THREE.Mesh(
+      new THREE.SphereGeometry(blackHoleRadius, 64, 64),
+      new THREE.MeshBasicMaterial({ color: 0x000000 })
+    );
+    blackHole.position.set(0, 0, 0);
     scene.add(blackHole);
 
-    // Accretion Disk (glowing ring)
-    const diskGeometry = new THREE.RingGeometry(30, 80, 256);
-    const diskMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0.0 }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform float time;
-        varying vec2 vUv;
-        void main() {
-          float dist = length(vUv - 0.5);
-          float intensity = smoothstep(0.2, 0.5, dist);
-          float glow = sin(time * 5.0 + dist * 20.0) * 0.5 + 0.5;
-          vec3 color = mix(vec3(1.0, 0.3, 0.0), vec3(1.0, 1.0, 0.0), glow);
-          gl_FragColor = vec4(color * (1.0 - intensity), 1.0);
-        }
-      `,
-      side: THREE.DoubleSide,
-      transparent: true
-    });
-    const accretionDisk = new THREE.Mesh(diskGeometry, diskMaterial);
-    accretionDisk.rotation.x = Math.PI / 2;
-    scene.add(accretionDisk);
+    // ------------------------
+    // Lensing billboard (shader plane)
+    // ------------------------
+    const lensSize = 220;
+    const lensUniforms = {
+      uTex:          { value: milkyWay },
+      uTime:         { value: 0.0 },
+      uLensRadius:   { value: lensSize * 0.5 },
+      uHoleRadius:   { value: blackHoleRadius * 1.05 },
+      uBendStrength: { value: 0.008 },
+      uRingRadius:   { value: blackHoleRadius * 1.6 },
+      uRingWidth:    { value: 12.0 },
+      uRingIntensity:{ value: 1.25 },
+      uDiskTilt:     { value: 0.35 },
+      uDiskWidth:    { value: 10.0 },
+      uDiskIntensity:{ value: 0.85 },
+      uCameraPos:    { value: new THREE.Vector3() }
+    };
 
-    // Animate
-    function animate(time) {
+    // Complete vertex shader
+    const vertexShader = `
+      varying vec3 vWorldPos;
+      varying vec2 vUv;
+      
+      void main() {
+        vUv = uv;
+        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+        vWorldPos = worldPos.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `;
+
+    // Complete fragment shader with lensing effect
+    const fragmentShader = `
+      uniform sampler2D uTex;
+      uniform float uTime;
+      uniform float uLensRadius;
+      uniform float uHoleRadius;
+      uniform float uBendStrength;
+      uniform float uRingRadius;
+      uniform float uRingWidth;
+      uniform float uRingIntensity;
+      uniform float uDiskTilt;
+      uniform float uDiskWidth;
+      uniform float uDiskIntensity;
+      uniform vec3 uCameraPos;
+      
+      varying vec3 vWorldPos;
+      varying vec2 vUv;
+      
+      void main() {
+        // Calculate direction from black hole to fragment
+        vec3 holeToFrag = vWorldPos - vec3(0.0);
+        float dist = length(holeToFrag);
+        
+        // Normalize and project onto lens plane
+        vec2 dir = normalize(holeToFrag.xy);
+        float r = length(holeToFrag.xy);
+        
+        // Gravitational lensing effect - light bending
+        float bend = uBendStrength * uHoleRadius / max(r, uHoleRadius);
+        float newR = r + bend * 50.0;
+        
+        // Convert back to UV coordinates
+        vec2 uv = vec2(0.5) + dir * newR / uLensRadius;
+        
+        // Check if we're in the black hole region
+        if (r < uHoleRadius) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+          return;
+        }
+        
+        // Sample the background texture with distortion
+        vec4 bgColor = texture2D(uTex, uv);
+        
+        // Einstein ring effect
+        float ring = smoothstep(uRingRadius - uRingWidth, uRingRadius, r) *
+                    smoothstep(uRingRadius + uRingWidth, uRingRadius, r);
+        vec3 ringColor = bgColor.rgb + vec3(ring * uRingIntensity);
+        
+        // Accretion disk effect
+        float diskZ = abs(holeToFrag.z);
+        float diskR = length(holeToFrag.xy);
+        float disk = smoothstep(diskR - uDiskWidth, diskR, uRingRadius * 0.8) *
+                    smoothstep(diskR + uDiskWidth, diskR, uRingRadius * 0.8) *
+                    (1.0 - smoothstep(0.0, uDiskWidth * 2.0, diskZ));
+        
+        // Combine all effects
+        vec3 finalColor = mix(ringColor, vec3(1.0, 0.9, 0.7), disk * uDiskIntensity);
+        
+        // Add blue shift near the event horizon
+        float blueShift = smoothstep(uHoleRadius * 1.5, uHoleRadius, r);
+        finalColor = mix(finalColor, finalColor * vec3(0.5, 0.7, 1.5), blueShift * 0.5);
+        
+        gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    const lensMat = new THREE.ShaderMaterial({
+      uniforms: lensUniforms,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      transparent: true,
+      depthTest: true,
+      depthWrite: false
+    });
+
+    const lensPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(lensSize, lensSize, 64, 64),
+      lensMat
+    );
+    lensPlane.position.set(0, 0, 0);
+    lensPlane.lookAt(0, 0, 1);
+    scene.add(lensPlane);
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // UI controls
+    document.getElementById('bendStrength').addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      lensUniforms.uBendStrength.value = value;
+      document.getElementById('bendStrengthValue').textContent = value.toFixed(3);
+    });
+
+    document.getElementById('ringIntensity').addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      lensUniforms.uRingIntensity.value = value;
+      document.getElementById('ringIntensityValue').textContent = value.toFixed(2);
+    });
+
+    document.getElementById('diskIntensity').addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      lensUniforms.uDiskIntensity.value = value;
+      document.getElementById('diskIntensityValue').textContent = value.toFixed(2);
+    });
+
+    // Animation loop
+    function animate() {
       requestAnimationFrame(animate);
-      accretionDisk.material.uniforms.time.value = time * 0.001;
+      
+      // Update time uniform for any time-based effects
+      lensUniforms.uTime.value += 0.01;
+      
+      // Make lens plane always face the camera
+      lensPlane.quaternion.copy(camera.quaternion);
+      
+      // Update camera position uniform
+      lensUniforms.uCameraPos.value.copy(camera.position);
+      
       controls.update();
       renderer.render(scene, camera);
     }
 
     animate();
-
-    // Responsive resize
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
   </script>
 </body>
 </html>
