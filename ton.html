@@ -1,201 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Black Hole — Gravitational Lensing</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <title>Black Hole Simulation</title>
   <style>
-    html, body { margin: 0; height: 100%; background: black; overflow: hidden; }
+    body { margin: 0; overflow: hidden; background: black; }
     canvas { display: block; }
   </style>
 </head>
 <body>
-  <!-- Three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
   <script>
-    // ------------------------
-    // Scene setup (fullscreen shader)
-    // ------------------------
+    // Scene
+    const scene = new THREE.Scene();
+
+    // Camera
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(0, 50, 200);
+
+    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // An orthographic camera mapping clip space (-1..1) so a 2x2 plane fills the screen
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const scene  = new THREE.Scene();
+    // Orbit Controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+    controls.minDistance = 50;
+    controls.maxDistance = 1000;
 
-    // Load background (your Milky Way) — set repeat so UV wrapping works when distorted
-    const texLoader = new THREE.TextureLoader();
-    const bgTex = texLoader.load(
-      "https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_milkyway.jpg",
-      () => renderer.render(scene, camera)
-    );
-    bgTex.wrapS = THREE.RepeatWrapping;
-    bgTex.wrapT = THREE.RepeatWrapping;
-    bgTex.minFilter = THREE.LinearMipMapLinearFilter;
-    bgTex.magFilter = THREE.LinearFilter;
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
 
-    // Shader uniforms
-    const uniforms = {
-      uTex: { value: bgTex },
-      uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-      // Black hole center in UV coords (0..1). (0.5, 0.5) = center of screen.
-      uBHCenter: { value: new THREE.Vector2(0.5, 0.5) },
-      // Radius of the event horizon in UV space
-      uHoleRadius: { value: 0.08 },
-      // Bending strength (tweak to taste)
-      uBendStrength: { value: 0.06 },
-      // Einstein ring (glow) controls
-      uRingRadius: { value: 0.12 },   // slightly larger than hole radius
-      uRingWidth:  { value: 0.03 },
-      uRingIntensity: { value: 1.2 },
-      // Accretion band controls
-      uDiskTilt:   { value: 0.35 },   // radians; tilt of disk relative to screen
-      uDiskWidth:  { value: 0.03 },
-      uDiskIntensity: { value: 0.9 },
-      // Time for subtle animation
-      uTime: { value: 0.0 }
-    };
+    const pointLight = new THREE.PointLight(0xffffff, 2, 2000);
+    pointLight.position.set(200, 200, 200);
+    scene.add(pointLight);
 
-    // Fullscreen quad (clip-space plane)
-    const quad = new THREE.Mesh(
-      new THREE.PlaneGeometry(2, 2),
-      new THREE.ShaderMaterial({
-        uniforms,
-        vertexShader: `
-          varying vec2 vUv;
-          void main() {
-            vUv = uv;
-            gl_Position = vec4(position, 1.0);
-          }
-        `,
-        fragmentShader: `
-          precision highp float;
+    // Black Hole (dark sphere)
+    const blackHoleGeometry = new THREE.SphereGeometry(20, 64, 64);
+    const blackHoleMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const blackHole = new THREE.Mesh(blackHoleGeometry, blackHoleMaterial);
+    scene.add(blackHole);
 
-          uniform sampler2D uTex;
-          uniform vec2  uResolution;
-          uniform vec2  uBHCenter;
-          uniform float uHoleRadius;
-          uniform float uBendStrength;
-
-          uniform float uRingRadius;
-          uniform float uRingWidth;
-          uniform float uRingIntensity;
-
-          uniform float uDiskTilt;
-          uniform float uDiskWidth;
-          uniform float uDiskIntensity;
-
-          uniform float uTime;
-          varying vec2 vUv;
-
-          // Soft ring (gaussian-ish)
-          float ring(vec2 uv, vec2 center, float r, float w){
-            float d = length(uv - center);
-            float x = (d - r) / max(1e-6, w);
-            return exp(-x*x * 6.0); // sharper falloff
-          }
-
-          // Soft band (for accretion disk), tilted by angle
-          float band(vec2 uv, vec2 center, float tilt, float width){
-            // rotate coords around center
-            float s = sin(tilt), c = cos(tilt);
-            vec2 p = uv - center;
-            vec2 pr = vec2(c*p.x - s*p.y, s*p.x + c*p.y);
-            float distLine = abs(pr.y);
-            float core = smoothstep(width, 0.0, distLine);
-            return core;
-          }
-
-          void main(){
-            // Start with screen UV
-            vec2 uv = vUv;
-            vec2 center = uBHCenter;
-
-            // Distance & direction from BH center
-            vec2  toBH  = uv - center;
-            float dist  = length(toBH);
-
-            // Event horizon: true black (no light escapes)
-            if (dist < uHoleRadius) {
-              gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-              return;
-            }
-
-            // Gravitational lensing: bend lines toward the BH
-            // Simple model: bend proportional to 1/dist (screen-space approximation)
-            vec2 dir = normalize(toBH);
-            float bend = uBendStrength / max(1e-3, dist);
-            vec2 lensedUV = uv + dir * bend;
-
-            // Add a subtle time-based swirl near the hole to hint frame dragging
-            float spin = 0.002 * sin(uTime * 0.5);
-            float s = sin(spin), c = cos(spin);
-            vec2 p = lensedUV - center;
-            lensedUV = center + vec2(c*p.x - s*p.y, s*p.x + c*p.y);
-
-            // Wrap UV (texture set to RepeatWrapping)
-            vec2 wrapUV = fract(lensedUV);
-
-            // Background color (lensed)
-            vec3 col = texture2D(uTex, wrapUV).rgb;
-
-            // Einstein ring glow
-            float ringGlow = ring(uv, center, uRingRadius, uRingWidth) * uRingIntensity;
-
-            // Accretion disk band (glowing, slightly animated)
-            float disk = band(uv, center, uDiskTilt, uDiskWidth);
-            // Modulate disk with some radial + time noise for flicker
-            float flicker = 0.6 + 0.4 * sin(20.0*length(uv - center) - uTime*3.0);
-            vec3 diskColor = vec3(1.0, 0.55, 0.2) * disk * uDiskIntensity * flicker;
-
-            // Boost highlights from ring
-            col += vec3(1.0, 0.9, 0.7) * ringGlow;
-
-            // Add disk glow on top
-            col = mix(col, col + diskColor, 0.8);
-
-            gl_FragColor = vec4(col, 1.0);
-          }
-        `
-      })
-    );
-    scene.add(quad);
-
-    // ------------------------
-    // Animate
-    // ------------------------
-    const clock = new THREE.Clock();
-
-    function onResize() {
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
-    }
-    window.addEventListener('resize', onResize);
-
-    // Optional: move BH center with pointer (fun!)
-    window.addEventListener('pointermove', (e) => {
-      const x = e.clientX / window.innerWidth;
-      const y = 1.0 - (e.clientY / window.innerHeight); // flip to UV-style
-      uniforms.uBHCenter.value.set(x, y);
+    // Accretion Disk (glowing ring)
+    const diskGeometry = new THREE.RingGeometry(30, 80, 256);
+    const diskMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform float time;
+        varying vec2 vUv;
+        void main() {
+          float dist = length(vUv - 0.5);
+          float intensity = smoothstep(0.2, 0.5, dist);
+          float glow = sin(time * 5.0 + dist * 20.0) * 0.5 + 0.5;
+          vec3 color = mix(vec3(1.0, 0.3, 0.0), vec3(1.0, 1.0, 0.0), glow);
+          gl_FragColor = vec4(color * (1.0 - intensity), 1.0);
+        }
+      `,
+      side: THREE.DoubleSide,
+      transparent: true
     });
+    const accretionDisk = new THREE.Mesh(diskGeometry, diskMaterial);
+    accretionDisk.rotation.x = Math.PI / 2;
+    scene.add(accretionDisk);
 
-    function animate() {
-      uniforms.uTime.value += clock.getDelta();
-      renderer.render(scene, camera);
+    // Animate
+    function animate(time) {
       requestAnimationFrame(animate);
+      accretionDisk.material.uniforms.time.value = time * 0.001;
+      controls.update();
+      renderer.render(scene, camera);
     }
+
     animate();
 
-    // ------------------------
-    // Tweakable tips:
-    // - uHoleRadius: size of event horizon (0.05–0.12 looks good)
-    // - uBendStrength: stronger/weaker lens (0.03–0.10)
-    // - uRingRadius & uRingWidth: Einstein ring position/thickness
-    // - uDiskTilt: rotate the accretion band (0 ~ 3.14)
-    // ------------------------
+    // Responsive resize
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
