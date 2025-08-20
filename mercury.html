@@ -78,7 +78,7 @@ const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
 
 // Background Space
-const spaceGeometry = new THREE.SphereGeometry(500, 128, 128);
+const spaceGeometry = new THREE.SphereGeometry(2000, 128, 128);
 const spaceMaterial = new THREE.MeshBasicMaterial({ map: spaceTexture, side: THREE.BackSide });
 const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
 scene.add(spaceSphere);
