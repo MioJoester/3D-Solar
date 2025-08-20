@@ -78,7 +78,7 @@ const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
 
 // Background Space
-const spaceGeometry = new THREE.SphereGeometry(500, 128, 128);
+const spaceGeometry = new THREE.SphereGeometry(800, 128, 128);
 const spaceMaterial = new THREE.MeshBasicMaterial({ map: spaceTexture, side: THREE.BackSide });
 const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
 scene.add(spaceSphere);
@@ -242,6 +242,7 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
     </script>
 </body>
 </html>
+
 
 
 
