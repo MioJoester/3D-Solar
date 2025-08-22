@@ -72,7 +72,7 @@ const spaceTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/
 const asteroidTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Asteroid_243_Ida.jpg/640px-Asteroid_243_Ida.jpg');
 
 // Create Sun
-const sunMaterial = new THREE.MeshStandardMaterial({ map: sunTexture, emissiveIntensity: 7 });
+const sunMaterial = new THREE.MeshStandardMaterial({ map: sunTexture, emissiveIntensity: 1 });
 const sunGeometry = new THREE.SphereGeometry(9, 64, 64);
 const sun = new THREE.Mesh(sunGeometry, sunMaterial);
 scene.add(sun);
