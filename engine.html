@@ -1,700 +1,477 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation - Engine</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            margin: 0;
-            overflow: hidden;
-            background: #2d2d30;
-            color: #cccccc;
-            usesr-select:none;
-        }
-        
-        /* Main layout */
-        .container {
-            display: grid;
-            height: 100vh;
-            grid-template-columns: 250px 1fr 300px;
-            grid-template-rows: 40px 1fr 200px;
-            grid-template-areas:
-                "header header header"
-                "sidebar viewport properties"
-                "timeline timeline timeline";
-        }
-        
-        /* Header */
-        .header {
-            grid-area: header;
-            background: #3e3e42;
-            border-bottom: 1px solid #1e1e1e;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            -webkit-app-region: drag;
-        }
-        
-        .menu {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .menu-item {
-            font-size: 13px;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 3px;
-        }
-        
-        .menu-item:hover {
-            background: #2d2d30;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            grid-area: sidebar;
-            background: #252526;
-            border-right: 1px solid #1e1e1e;
-            padding: 10px;
-            overflow-y: auto;
-        }
-        
-        .panel {
-            margin-bottom: 15px;
-        }
-        
-        .panel-header {
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #969696;
-            padding: 5px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .panel-content {
-            padding: 5px 0;
-        }
-        
-        .hierarchy-item {
-            padding: 5px 10px;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            border-radius: 3px;
-        }
-        
-        .hierarchy-item:hover {
-            background: #2a2d2e;
-        }
-        
-        .hierarchy-item.active {
-            background: #37373d;
-        }
-        
-        /* Viewport */
-        .viewport {
-            grid-area: viewport;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .viewport-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            font-size: 12px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 5px 10px;
-            border-radius: 3px;
-            pointer-events: none;
-        }
-        
-        .viewport-controls {
-            position: absolute;
-            right: 10px;
-            top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .viewport-btn {
-            width: 30px;
-            height: 30px;
-            background: rgba(30, 30, 30, 0.8);
-            border: 1px solid #3e3e42;
-            color: #cccccc;
-            border-radius: 3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .viewport-btn:hover {
-            background: rgba(30, 30, 30, 1);
-        }
-        
-        /* Properties panel */
-        .properties {
-            grid-area: properties;
-            background: #252526;
-            border-left: 1px solid #1e1e1e;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        
-        .property-group {
-            margin-bottom: 15px;
-        }
-        
-        .property-item {
-            margin-bottom: 10px;
-        }
-        
-        .property-label {
-            font-size: 12px;
-            color: #969696;
-            margin-bottom: 5px;
-        }
-        
-        .property-input {
-            width: 100%;
-            background: #3c3c3c;
-            border: 1px solid #1e1e1e;
-            color: #cccccc;
-            padding: 5px 8px;
-            border-radius: 3px;
-        }
-        
-        .property-slider {
-            width: 100%;
-        }
-        
-        /* Timeline */
-        .timeline {
-            grid-area: timeline;
-            background: #1e1e1e;
-            border-top: 1px solid #3e3e42;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .timeline-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .timeline-btn {
-            width: 30px;
-            height: 30px;
-            background: #3c3c3c;
-            border: 1px solid #3e3e42;
-            color: #cccccc;
-            border-radius: 3px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .timeline-track {
-            height: 60px;
-            background: #252526;
-            border: 1px solid #3e3e42;
-            border-radius: 3px;
-            position: relative;
-        }
-        
-        /* Icons */
-        .icon {
-            width: 16px;
-            height: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Tabs */
-        .tabs {
-            display: flex;
-            border-bottom: 1px solid #1e1e1e;
-            margin-bottom: 10px;
-        }
-        
-        .tab {
-            padding: 5px 15px;
-            font-size: 12px;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-        
-        .tab.active {
-            border-bottom: 2px solid #007acc;
-            color: #ffffff;
-        }
-        
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #424245;
-            border-radius: 5px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4e4e51;
-        }
-        
-        /* Status bar */
-        .status-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 22px;
-            background: #007acc;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            font-size: 12px;
-            z-index: 1000;
-        }
-        
-        /* Toolbar */
-        .toolbar {
-            position: absolute;
-            top: 50px;
-            left: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            background: rgba(30, 30, 30, 0.8);
-            padding: 5px;
-            border-radius: 3px;
-            border: 1px solid #3e3e42;
-        }
-        
-        .tool-btn {
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-        
-        .tool-btn:hover {
-            background: #37373d;
-        }
-        
-        .tool-btn.active {
-            background: #007acc;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solar System Simulation - Engine UI</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+    body{overflow:hidden;background:#2d2d30;color:#ccc}
+    .container{display:grid;height:100vh;grid-template-columns:250px 1fr 300px;grid-template-rows:40px 1fr 0px;grid-template-areas:"header header header" "sidebar viewport properties" "timeline timeline timeline";}
+    .header{grid-area:header;background:#3e3e42;border-bottom:1px solid #1e1e1e;display:flex;align-items:center;padding:0 15px}
+    .menu{display:flex;gap:20px}
+    .menu-item{font-size:13px;cursor:pointer;padding:5px 10px;border-radius:3px}
+    .menu-item:hover{background:#2d2d30}
+    .sidebar{grid-area:sidebar;background:#252526;border-right:1px solid #1e1e1e;padding:10px;overflow-y:auto}
+    .panel{margin-bottom:15px}
+    .panel-header{font-size:12px;text-transform:uppercase;color:#969696;padding:5px 0;display:flex;justify-content:space-between;align-items:center}
+    .panel-content{padding:5px 0}
+    .hierarchy-item{padding:5px 10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;border-radius:3px}
+    .hierarchy-item:hover{background:#2a2d2e}
+    .hierarchy-item.active{background:#37373d}
+    .viewport{grid-area:viewport;position:relative;overflow:hidden;background:#000}
+    .viewport-overlay{position:absolute;top:10px;left:10px;color:white;font-size:12px;background:rgba(0,0,0,.5);padding:5px 10px;border-radius:3px;pointer-events:none}
+    .viewport-controls{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:5px}
+    .viewport-btn{width:30px;height:30px;background:rgba(30,30,30,.8);border:1px solid #3e3e42;color:#ccc;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    .viewport-btn:hover{background:rgba(30,30,30,1)}
+    .properties{grid-area:properties;background:#252526;border-left:1px solid #1e1e1e;padding:15px;overflow-y:auto}
+    .property-group{margin-bottom:15px}
+    .property-item{margin-bottom:10px}
+    .property-label{font-size:12px;color:#969696;margin-bottom:5px}
+    .property-input{width:100%;background:#3c3c3c;border:1px solid #1e1e1e;color:#ccc;padding:5px 8px;border-radius:3px}
+    .property-slider{width:100%}
+    .tabs{display:flex;border-bottom:1px solid #1e1e1e;margin-bottom:10px}
+    .tab{padding:5px 15px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent}
+    .tab.active{border-bottom:2px solid #007acc;color:#fff}
+    .status-bar{position:fixed;bottom:0;left:0;right:0;height:22px;background:#007acc;display:flex;align-items:center;padding:0 10px;font-size:12px;z-index:1000}
+    .toolbar{position:absolute;top:50px;left:10px;display:flex;flex-direction:column;gap:5px;background:rgba(30,30,30,.8);padding:5px;border-radius:3px;border:1px solid #3e3e42}
+    .tool-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px}
+    .tool-btn:hover{background:#37373d}
+    .tool-btn.active{background:#007acc}
+    .timeline{display:none}
+    /* small helper for disabled inputs */
+    .disabled{opacity:.6;pointer-events:none}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="menu">
-                <div class="menu-item">File</div>
-                <div class="menu-item">Edit</div>
-                <div class="menu-item">View</div>
-                <div class="menu-item">Object</div>
-                <div class="menu-item">Simulation</div>
-                <div class="menu-item">Help</div>
-            </div>
-        </div>
-        
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="panel">
-                <div class="panel-header">
-                    <span>Scene Hierarchy</span>
-                    <i class="fas fa-plus" style="font-size: 12px; cursor: pointer;"></i>
-                </div>
-                <div class="panel-content">
-                    <div class="hierarchy-item active">
-                        <i class="fas fa-sun"></i>
-                        <span>Sun</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Mercury</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Venus</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Earth</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Mars</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Jupiter</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-globe-americas"></i>
-                        <span>Saturn</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-asterisk"></i>
-                        <span>Asteroid Belt</span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="panel">
-                <div class="panel-header">
-                    <span>Layers</span>
-                </div>
-                <div class="panel-content">
-                    <div class="hierarchy-item">
-                        <i class="fas fa-eye"></i>
-                        <span>Default</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-eye"></i>
-                        <span>Orbits</span>
-                    </div>
-                    <div class="hierarchy-item">
-                        <i class="fas fa-eye"></i>
-                        <span>Labels</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Viewport -->
-        <div class="viewport" id="viewport">
-            <div class="viewport-overlay">Perspective</div>
-            <div class="toolbar">
-                <div class="tool-btn active"><i class="fas fa-hand-paper"></i></div>
-                <div class="tool-btn"><i class="fas fa-arrows-alt"></i></div>
-                <div class="tool-btn"><i class="fas fa-sync"></i></div>
-                <div class="tool-btn"><i class="fas fa-expand"></i></div>
-            </div>
-            <div class="viewport-controls">
-                <div class="viewport-btn"><i class="fas fa-compress-arrows-alt"></i></div>
-                <div class="viewport-btn"><i class="fas fa-camera"></i></div>
-                <div class="viewport-btn"><i class="fas fa-cog"></i></div>
-            </div>
-        </div>
-        
-        <!-- Properties Panel -->
-        <div class="properties">
-            <div class="tabs">
-                <div class="tab active">Properties</div>
-                <div class="tab">Materials</div>
-                <div class="tab">Physics</div>
-            </div>
-            
-            <div class="property-group">
-                <div class="panel-header">Transform</div>
-                <div class="property-item">
-                    <div class="property-label">Position</div>
-                    <input type="text" class="property-input" value="0.0, 0.0, 0.0">
-                </div>
-                <div class="property-item">
-                    <div class="property-label">Rotation</div>
-                    <input type="text" class="property-input" value="0.0, 0.0, 0.0">
-                </div>
-                <div class="property-item">
-                    <div class="property-label">Scale</div>
-                    <input type="text" class="property-input" value="1.0, 1.0, 1.0">
-                </div>
-            </div>
-            
-            <div class="property-group">
-                <div class="panel-header">Celestial Body</div>
-                <div class="property-item">
-                    <div class="property-label">Orbit Speed</div>
-                    <input type="range" class="property-slider" min="0" max="100" value="10">
-                </div>
-                <div class="property-item">
-                    <div class="property-label">Size</div>
-                    <input type="text" class="property-input" value="1.0">
-                </div>
-                <div class="property-item">
-                    <div class="property-label">Mass</div>
-                    <input type="text" class="property-input" value="5.97e24 kg">
-                </div>
-            </div>
-            
-            <div class="property-group">
-                <div class="panel-header">Appearance</div>
-                <div class="property-item">
-                    <div class="property-label">Texture</div>
-                    <input type="text" class="property-input" value="sun_texture.jpg">
-                </div>
-                <div class="property-item">
-                    <div class="property-label">Emissive</div>
-                    <input type="range" class="property-slider" min="0" max="10" value="7">
-                </div>
-            </div>
-        </div>
-        
-        <!-- Timeline -->
-        <div class="timeline">
-            <div class="timeline-controls">
-                <div class="timeline-btn"><i class="fas fa-step-backward"></i></div>
-                <div class="timeline-btn"><i class="fas fa-backward"></i></div>
-                <div class="timeline-btn"><i class="fas fa-play"></i></div>
-                <div class="timeline-btn"><i class="fas fa-forward"></i></div>
-                <div class="timeline-btn"><i class="fas fa-step-forward"></i></div>
-                <div style="font-size: 13px; margin-left: 10px;">Time Scale: 1.0x</div>
-            </div>
-            <div class="timeline-track"></div>
-        </div>
-    </div>
-    
-    <div class="status-bar">
-        <div style="margin-right: 15px;">Ready</div>
-        <div style="margin-right: 15px;">FPS: 60</div>
-        <div>Camera: (0.0, 20.0, -40.0)</div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="menu">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Object</div>
+        <div class="menu-item">Simulation</div>
+        <div class="menu-item">Help</div>
+      </div>
     </div>
 
-    <script type="module">
-        // Your Three.js code remains mostly the same, just adding UI interactions
-        // Scene setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(
-          75,
-          window.innerWidth / window.innerHeight,
-          0.1,
-          3000
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-header">
+          <span>Scene Hierarchy</span>
+          <i id="add-body" class="fas fa-plus" title="Add Body" style="font-size:12px;cursor:pointer;"></i>
+        </div>
+        <div id="hierarchy" class="panel-content">
+          <div class="hierarchy-item active" data-name="Sun"><i class="fas fa-sun"></i><span>Sun</span></div>
+          <div class="hierarchy-item" data-name="Mercury"><i class="fas fa-globe-americas"></i><span>Mercury</span></div>
+          <div class="hierarchy-item" data-name="Venus"><i class="fas fa-globe-americas"></i><span>Venus</span></div>
+          <div class="hierarchy-item" data-name="Earth"><i class="fas fa-globe-americas"></i><span>Earth</span></div>
+          <div class="hierarchy-item" data-name="Mars"><i class="fas fa-globe-americas"></i><span>Mars</span></div>
+          <div class="hierarchy-item" data-name="Jupiter"><i class="fas fa-globe-americas"></i><span>Jupiter</span></div>
+          <div class="hierarchy-item" data-name="Saturn"><i class="fas fa-globe-americas"></i><span>Saturn</span></div>
+          <div class="hierarchy-item" data-name="Asteroid Belt"><i class="fas fa-asterisk"></i><span>Asteroid Belt</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><span>Layers</span></div>
+        <div class="panel-content">
+          <div class="hierarchy-item"><i class="fas fa-eye"></i><span>Default</span></div>
+          <div class="hierarchy-item"><i class="fas fa-eye"></i><span>Orbits</span></div>
+          <div class="hierarchy-item"><i class="fas fa-eye"></i><span>Labels</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Viewport -->
+    <div class="viewport" id="viewport">
+      <div class="viewport-overlay">Perspective</div>
+      <div class="toolbar">
+        <div class="tool-btn active"><i class="fas fa-hand-paper"></i></div>
+        <div class="tool-btn"><i class="fas fa-arrows-alt"></i></div>
+        <div class="tool-btn"><i class="fas fa-sync"></i></div>
+        <div class="tool-btn"><i class="fas fa-expand"></i></div>
+      </div>
+      <div class="viewport-controls">
+        <div class="viewport-btn" id="fit"><i class="fas fa-compress-arrows-alt"></i></div>
+        <div class="viewport-btn" id="snapshot"><i class="fas fa-camera"></i></div>
+        <div class="viewport-btn" id="settings"><i class="fas fa-cog"></i></div>
+      </div>
+    </div>
+
+    <!-- Properties -->
+    <div class="properties">
+      <div class="tabs">
+        <div class="tab active">Properties</div>
+        <div class="tab">Materials</div>
+        <div class="tab">Physics</div>
+      </div>
+
+      <div class="property-group">
+        <div class="panel-header">Transform</div>
+        <div class="property-item">
+          <div class="property-label">Position (x, y, z)</div>
+          <input id="prop-pos" type="text" class="property-input" value="0, 0, 0">
+        </div>
+        <div class="property-item">
+          <div class="property-label">Rotation° (x, y, z)</div>
+          <input id="prop-rot" type="text" class="property-input" value="0, 0, 0">
+        </div>
+        <div class="property-item">
+          <div class="property-label">Scale (x, y, z)</div>
+          <input id="prop-scale" type="text" class="property-input" value="1, 1, 1">
+        </div>
+      </div>
+
+      <div class="property-group">
+        <div class="panel-header">Celestial Body</div>
+        <div class="property-item">
+          <div class="property-label">Orbit Speed</div>
+          <input id="prop-orbitSpeed" type="range" class="property-slider" min="0" max="50" value="10" step="0.1">
+        </div>
+        <div class="property-item">
+          <div class="property-label">Size (uniform)</div>
+          <input id="prop-size" type="text" class="property-input" value="1">
+        </div>
+        <div class="property-item">
+          <div class="property-label">Mass (display)</div>
+          <input id="prop-mass" type="text" class="property-input" value="—">
+        </div>
+      </div>
+
+      <div class="property-group">
+        <div class="panel-header">Appearance</div>
+        <div class="property-item">
+          <div class="property-label">Texture (CDN filename or full URL)</div>
+          <input id="prop-texture" type="text" class="property-input" value="">
+        </div>
+        <div class="property-item">
+          <div class="property-label">Emissive Intensity</div>
+          <input id="prop-emissive" type="range" class="property-slider" min="0" max="10" value="1" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline (hidden for now) -->
+    <div class="timeline"></div>
+  </div>
+
+  <div class="status-bar">
+    <div style="margin-right:15px;">Ready</div>
+    <div id="fps" style="margin-right:15px;">FPS: —</div>
+    <div id="cam">Camera: —</div>
+  </div>
+
+  <script type="module">
+    // ---------- Helpers ----------
+    const CDN = "https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/";
+    const viewport = document.getElementById('viewport');
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+    const posIn = $('#prop-pos');
+    const rotIn = $('#prop-rot');
+    const scaleIn = $('#prop-scale');
+    const orbitSpeedIn = $('#prop-orbitSpeed');
+    const sizeIn = $('#prop-size');
+    const massIn = $('#prop-mass');
+    const textureIn = $('#prop-texture');
+    const emissiveIn = $('#prop-emissive');
+
+    const parseVec = (s) => s.split(',').map(v => parseFloat(v.trim() || '0')).slice(0,3).concat([0,0,0]).slice(0,3);
+    const deg2rad = d => d * Math.PI / 180;
+
+    // ---------- Three.js Setup ----------
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 5000);
+    const renderer = new THREE.WebGLRenderer({ antialias:true });
+    viewport.appendChild(renderer.domElement);
+
+    function resize(){
+      const w = viewport.clientWidth, h = viewport.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener('resize', resize);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    camera.position.set(0, 60, 180);
+    controls.target.set(0,0,0);
+    resize();
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const sunLight = new THREE.PointLight(0xffffff, 2, 0);
+    sunLight.position.set(0,0,0);
+    scene.add(sunLight);
+
+    // Background
+    const loader = new THREE.TextureLoader();
+    const spaceTex = loader.load(CDN + "8k_milkyway.jpg");
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(2000, 64, 64),
+      new THREE.MeshBasicMaterial({ map: spaceTex, side: THREE.BackSide })
+    );
+    scene.add(sky);
+
+    // ---------- Data ----------
+    // Bodies map (includes Sun + planets). Each entry:
+    // { type:'sun'|'planet', mesh, name, distance?, speed?, angle, texture, mass? }
+    const bodies = {};
+    const clickableMeshes = [];
+
+    // Sun
+    const sunTex = loader.load(CDN + "8k_sun.jpg");
+    const sun = new THREE.Mesh(
+      new THREE.SphereGeometry(12, 64, 64),
+      new THREE.MeshStandardMaterial({ map: sunTex, emissive: 0xffcc66, emissiveIntensity: 2 })
+    );
+    sun.name = "Sun";
+    scene.add(sun);
+    bodies["Sun"] = { type:"sun", mesh:sun, name:"Sun", texture:"8k_sun.jpg" };
+    clickableMeshes.push(sun);
+
+    // Planets
+    const planetSeed = [
+      { name:"Mercury", texture:"8k_mercury.jpg", size:0.38, distance:11, speed:20, mass:"3.30e23 kg" },
+      { name:"Venus",   texture:"2k_venus.jpg",   size:0.95, distance:16, speed:15, mass:"4.87e24 kg" },
+      { name:"Earth",   texture:"8kearth.jpg",    size:1.00, distance:26, speed:10, mass:"5.97e24 kg" },
+      { name:"Mars",    texture:"8k_mars.jpg",    size:0.53, distance:36, speed: 8, mass:"6.42e23 kg" },
+      { name:"Jupiter", texture:"8k_jupiter.jpg", size:3.50, distance:141, speed:4, mass:"1.90e27 kg" },
+      { name:"Saturn",  texture:"8k_saturn.jpg",  size:2.90, distance:181, speed:3, tilt:5, mass:"5.68e26 kg" },
+    ];
+
+    function createPlanet({name, texture, size, distance, speed=10, tilt=0, mass="—"}) {
+      const tex = loader.load(texture.startsWith('http') ? texture : (CDN + texture));
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 48, 48),
+        new THREE.MeshStandardMaterial({ map: tex })
+      );
+      mesh.name = name;
+      scene.add(mesh);
+      const body = { type:"planet", mesh, name, texture, size, distance, speed, tilt, mass, angle: Math.random()*Math.PI*2 };
+      bodies[name] = body;
+      clickableMeshes.push(mesh);
+
+      // rings for Saturn
+      if (name === "Saturn") {
+        const ringTex = loader.load(CDN + "8k_saturn_ring_alpha.png");
+        const rings = new THREE.Mesh(
+          new THREE.RingGeometry(size*1.6, size*2.4, 128),
+          new THREE.MeshBasicMaterial({ map:ringTex, side:THREE.DoubleSide, transparent:true, alphaTest:0.5 })
         );
+        rings.rotation.x = -Math.PI/2;
+        mesh.add(rings);
+      }
+      return body;
+    }
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('viewport').appendChild(renderer.domElement);
+    planetSeed.forEach(createPlanet);
 
-        // Handle resizing (desktop + mobile)
-        window.addEventListener("resize", () => {
-          camera.aspect = window.innerWidth / window.innerHeight;
-          camera.updateProjectionMatrix();
+    // Asteroid belt (basic)
+    const asteroids = [];
+    (function createAsteroidBelt(){
+      const asteroidTex = loader.load("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Asteroid_243_Ida.jpg/640px-Asteroid_243_Ida.jpg");
+      const count = 300, inner = 80, width = 40;
+      for (let i=0;i<count;i++){
+        const a = Math.random()*Math.PI*2;
+        const r = inner + Math.random()*width;
+        const size = Math.random()*0.4 + 0.05;
+        const m = new THREE.Mesh(
+          new THREE.SphereGeometry(size, 12, 12),
+          new THREE.MeshStandardMaterial({ map: asteroidTex })
+        );
+        m.position.set(Math.cos(a)*r, (Math.random()-0.5)*2, Math.sin(a)*r);
+        scene.add(m);
+        asteroids.push(m);
+      }
+    })();
 
-          renderer.setSize(window.innerWidth, window.innerHeight);
-          renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        });
+    // ---------- Selection + UI binding ----------
+    let selected = bodies["Sun"];
+    const hierarchy = document.getElementById('hierarchy');
 
-        // Lighting setup
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-        scene.add(ambientLight);
-        const sunLight = new THREE.PointLight(0xffffff, 2, 100);
-        sunLight.position.set(0, 0, 0);
-        scene.add(sunLight);
+    function setActiveItemByName(name){
+      $$('#hierarchy .hierarchy-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.name === name);
+      });
+    }
 
-        // Load Textures
-        const textureLoader = new THREE.TextureLoader();
-        const sunTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_mars.jpg');
-        const spaceTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8k_milkyway.jpg');
-        const asteroidTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Asteroid_243_Ida.jpg/640px-Asteroid_243_Ida.jpg');
+    function fillPropertyPanel(b){
+      if (!b) return;
+      // Transform
+      const p = b.mesh.position, r = b.mesh.rotation, s = b.mesh.scale;
+      posIn.value = `${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)}`;
+      rotIn.value = `${(r.x*180/Math.PI).toFixed(1)}, ${(r.y*180/Math.PI).toFixed(1)}, ${(r.z*180/Math.PI).toFixed(1)}`;
+      scaleIn.value = `${s.x.toFixed(2)}, ${s.y.toFixed(2)}, ${s.z.toFixed(2)}`;
 
-        // Create Sun
-        const sunMaterial = new THREE.MeshStandardMaterial({ map: sunTexture, emissiveIntensity: 7 });
-        const sunGeometry = new THREE.SphereGeometry(9, 64, 64);
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
+      // Body
+      const isPlanet = b.type === "planet";
+      orbitSpeedIn.value = isPlanet ? b.speed : 0;
+      orbitSpeedIn.classList.toggle('disabled', !isPlanet);
+      sizeIn.value = b.mesh.scale.x.toFixed(2);
+      massIn.value = b.mass || "—";
 
-        // Background Space
-        const spaceGeometry = new THREE.SphereGeometry(2000, 128, 128);
-        const spaceMaterial = new THREE.MeshBasicMaterial({ map: spaceTexture, side: THREE.BackSide });
-        const spaceSphere = new THREE.Mesh(spaceGeometry, spaceMaterial);
-        scene.add(spaceSphere);
+      // Appearance
+      textureIn.value = b.texture || "";
+      const mat = b.mesh.material;
+      emissiveIn.value = (mat.emissiveIntensity || 0).toFixed(1);
+    }
 
-        // Asteroid Belt
-        const asteroids = [];
-        function createAsteroidBelt() {
-            const asteroidCount = 3;
-            const innerRadius = 80;
-            const outerRadius = 30;
+    // Hook hierarchy clicks
+    $$('#hierarchy .hierarchy-item').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const name = el.dataset.name;
+        if (!bodies[name]) return;
+        selected = bodies[name];
+        setActiveItemByName(name);
+        controls.target.copy(selected.mesh.position);
+        fillPropertyPanel(selected);
+      });
+    });
 
-            for (let i = 0; i < asteroidCount; i++) {
-                const angle = Math.random() * Math.PI * 2;
-                const distance = innerRadius + Math.random() * (outerRadius - innerRadius);
-                const size = Math.random() * 0.5 + 0.1;
-
-                const asteroidGeometry = new THREE.SphereGeometry(size, 16, 16);
-                const asteroidMaterial = new THREE.MeshStandardMaterial({ map: asteroidTexture });
-
-                const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
-                asteroid.position.set(
-                    Math.cos(angle) * distance,
-                    (Math.random() - 0.5) * 2,
-                    Math.sin(angle) * distance
-                );
-
-                asteroids.push(asteroid);
-                scene.add(asteroid);
-            }
+    // Click-to-select in 3D view
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    viewport.addEventListener('click', (e)=>{
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left)/rect.width)*2 - 1;
+      mouse.y = -((e.clientY - rect.top)/rect.height)*2 + 1;
+      raycaster.setFromCamera(mouse, camera);
+      const hits = raycaster.intersectObjects(clickableMeshes, false);
+      if (hits.length){
+        const obj = hits[0].object;
+        const b = bodies[obj.name];
+        if (b){
+          selected = b;
+          setActiveItemByName(b.name);
+          controls.target.copy(selected.mesh.position);
+          fillPropertyPanel(selected);
         }
-        createAsteroidBelt();
+      }
+    });
 
-        // Planets Data
-        const planets = [];
+    // Property listeners
+    orbitSpeedIn.addEventListener('input', e=>{
+      if (selected && selected.type === 'planet') selected.speed = parseFloat(e.target.value);
+    });
 
-        const planetData = [
-            { name: "Mercury", texture: "y.jpg", size: 0.0, distance: 10.8, speed: 20 },
-            { name: "Venus", texture: "s.jpg", size: 0.0, distance: 15.4, speed: 15 },
-            { name: "Earth", texture: "h.jpg", size: 0, distance: 26, speed: 10 },
-            { name: "Mars", texture: "s.jpg", size: 0.0, distance: 36.4, speed: 8 },
-            { name: "Jupiter", texture: "r.jpg", size: 0.0, distance: 141, speed: 4 },
-            { name: "Saturn", texture: "8.jpg", size: 0, distance: 181, speed: 3, tilt: 5 }
-        ];
+    sizeIn.addEventListener('change', e=>{
+      if (!selected) return;
+      const s = Math.max(0.01, parseFloat(e.target.value)||1);
+      selected.mesh.scale.set(s, s, s);
+      // keep scale input in sync
+      scaleIn.value = `${s.toFixed(2)}, ${s.toFixed(2)}, ${s.toFixed(2)}`;
+    });
 
-        planetData.forEach(data => {
-            const texture = textureLoader.load(`https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/${data.texture}`);
-            const planet = new THREE.Mesh(new THREE.SphereGeometry(data.size, 64, 64), new THREE.MeshStandardMaterial({ map: texture }));
-            scene.add(planet);
-            planets.push({ mesh: planet, distance: data.distance, speed: data.speed, tilt: data.tilt || 0 });
-        });
+    emissiveIn.addEventListener('input', e=>{
+      if (!selected) return;
+      const v = parseFloat(e.target.value)||0;
+      if (!selected.mesh.material.emissive) selected.mesh.material.emissive = new THREE.Color(0xffffff);
+      selected.mesh.material.emissiveIntensity = v;
+      selected.mesh.material.needsUpdate = true;
+    });
 
-        const Sat = planets.find(p => p.distance === 181).mesh; 
-        const ringTexture = textureLoader.load('https://cdn.jsdelivr.net/gh/MioJoester/Asset@main/8.png');
-        const ringGeometry = new THREE.RingGeometry(3, 5, 128);
-        const ringMaterial = new THREE.MeshBasicMaterial({ map: ringTexture, side: THREE.DoubleSide, transparent: true, alphaTest: 0.5 });
-        const SatRings = new THREE.Mesh(ringGeometry, ringMaterial);
-        SatRings.rotation.x = -Math.PI / 2;
-        Sat.add(SatRings);
+    textureIn.addEventListener('change', e=>{
+      if (!selected) return;
+      const val = e.target.value.trim();
+      selected.texture = val;
+      const url = val.startsWith('http') ? val : (CDN + val);
+      const tex = loader.load(url, ()=>{ selected.mesh.material.needsUpdate = true; });
+      selected.mesh.material.map = tex;
+    });
 
-        //3d camera + Renderer
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.enablePan = true;
-        controls.screenSpacePanning = false;
-        controls.minDistance = 5;
-        controls.maxDistance = 1000;
+    posIn.addEventListener('change', e=>{
+      if (!selected) return;
+      const [x,y,z] = parseVec(e.target.value);
+      selected.mesh.position.set(x,y,z);
+      controls.target.copy(selected.mesh.position);
+    });
 
-        // Zoom Focus on Click
-        let selectedPlanet = spaceSphere;
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
+    rotIn.addEventListener('change', e=>{
+      if (!selected) return;
+      const [x,y,z] = parseVec(e.target.value);
+      selected.mesh.rotation.set(deg2rad(x), deg2rad(y), deg2rad(z));
+    });
 
-        window.addEventListener('click', (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(planets.map(p => p.mesh));
+    scaleIn.addEventListener('change', e=>{
+      if (!selected) return;
+      const [x,y,z] = parseVec(e.target.value);
+      selected.mesh.scale.set(Math.max(0.01,x||1), Math.max(0.01,y||1), Math.max(0.01,z||1));
+      sizeIn.value = selected.mesh.scale.x.toFixed(2);
+    });
 
-            if (intersects.length > 0) {
-                selectedPlanet = intersects[0].object;
-                controls.target.copy(selectedPlanet.position);
-                
-                // Update UI to show selected planet
-                document.querySelectorAll('.hierarchy-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                // This is a simplified version - you'd need to map the planet to the UI element
-                document.querySelector('.hierarchy-item:nth-child(2)').classList.add('active');
-            }
-        });
+    // Add body (+) button
+    document.getElementById('add-body').addEventListener('click', ()=>{
+      const name = prompt("Name of body?", "NewPlanet");
+      if (!name) return;
+      const texture = prompt("Texture filename (on your CDN) or full URL:", "8kearth.jpg") || "8kearth.jpg";
+      const size = parseFloat(prompt("Size (radius units)", "1")) || 1;
+      const distance = parseFloat(prompt("Orbit distance", "40")) || 40;
+      const speed = parseFloat(prompt("Orbit speed", "8")) || 8;
 
-        controls.addEventListener('change', () => {
-            if (selectedPlanet) {
-                controls.target.copy(selectedPlanet.position);
-            }
-        });
+      if (bodies[name]) { alert("A body with that name already exists."); return; }
+      createPlanet({ name, texture, size, distance, speed });
 
-        // Animation loop with Saturn's Tilted Orbit
-        function animate() {
-            requestAnimationFrame(animate);
+      // add to hierarchy UI
+      const div = document.createElement('div');
+      div.className = 'hierarchy-item';
+      div.dataset.name = name;
+      div.innerHTML = `<i class="fas fa-globe-americas"></i><span>${name}</span>`;
+      div.addEventListener('click', ()=>{ selected = bodies[name]; setActiveItemByName(name); controls.target.copy(selected.mesh.position); fillPropertyPanel(selected); });
+      hierarchy.insertBefore(div, hierarchy.lastElementChild); // before Asteroid Belt
+    });
 
-            const time = performance.now() * 0.0001;
-            planets.forEach(planet => {
-                const angle = time * planet.speed;
-                let x = Math.cos(angle) * planet.distance;
-                let z = Math.sin(angle) * planet.distance;
-                let y = 0;
+    // Fit view button
+    document.getElementById('fit').addEventListener('click', ()=>{
+      camera.position.set(0, 120, 240);
+      controls.target.set(0,0,0);
+    });
 
-                // Apply tilt to Saturn's orbit
-                if (planet.mesh === Sat) {
-                    let tiltRad = THREE.MathUtils.degToRad(planet.tilt);
-                    y = Math.sin(angle) * planet.distance * Math.sin(tiltRad);
-                    z = Math.sin(angle) * planet.distance * Math.cos(tiltRad);
-                }
+    // ---------- Animation ----------
+    let last = performance.now();
+    function animate(now){
+      requestAnimationFrame(animate);
+      const dt = (now - last) / 1000; last = now;
 
-                planet.mesh.position.set(x, y, z);
-            });
-
-            controls.update();
-            renderer.render(scene, camera);
-            
-            // Update FPS counter and camera position in status bar (simplified)
-            document.querySelector('.status-bar div:nth-child(2)').textContent = 
-                `FPS: ${Math.round(1000 / (performance.now() % 1000))}`;
+      // planets orbit
+      for (const b of Object.values(bodies)){
+        if (b.type === 'planet'){
+          b.angle += (b.speed || 0) * 0.5 * dt; // 0.5 tweak so slider feels good
+          // tilted orbit for Saturn
+          if ((b.tilt||0) !== 0){
+            const t = THREE.MathUtils.degToRad(b.tilt);
+            const x = Math.cos(b.angle) * b.distance;
+            const y = Math.sin(b.angle) * b.distance * Math.sin(t);
+            const z = Math.sin(b.angle) * b.distance * Math.cos(t);
+            b.mesh.position.set(x,y,z);
+          } else {
+            b.mesh.position.set(Math.cos(b.angle)*b.distance, 0, Math.sin(b.angle)*b.distance);
+          }
         }
+      }
 
-        // Set initial camera position
-        camera.position.set(0, 20, -40);
-        controls.update();
+      controls.update();
+      renderer.render(scene, camera);
 
-        animate();
+      // status bar
+      $('#fps').textContent = `FPS: ${Math.round(1/Math.max(dt,1e-3))}`;
+      const cp = camera.position; $('#cam').textContent = `Camera: (${cp.x.toFixed(1)}, ${cp.y.toFixed(1)}, ${cp.z.toFixed(1)})`;
+    }
+    requestAnimationFrame(animate);
 
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-        });
-
-        // UI Interactions
-        document.querySelectorAll('.hierarchy-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.hierarchy-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-
-        document.querySelectorAll('.tool-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    </script>
+    // init UI with Sun selected
+    fillPropertyPanel(selected);
+  </script>
 </body>
 </html>
