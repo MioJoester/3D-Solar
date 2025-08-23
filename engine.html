@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar System Simulation - Engine UI</title>
+    <title>Simulation - Engine</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -111,7 +111,6 @@
             grid-area: viewport;
             position: relative;
             overflow: hidden;
-            height: ;
         }
         
         .viewport-overlay {
@@ -190,7 +189,12 @@
         
         /* Timeline */
         .timeline {
-          display: none;
+            grid-area: timeline;
+            background: #1e1e1e;
+            border-top: 1px solid #3e3e42;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
         }
         
         .timeline-controls {
@@ -463,8 +467,17 @@
         </div>
         
         <!-- Timeline -->
-         <div class="timeline"></div>
-       
+        <div class="timeline">
+            <div class="timeline-controls">
+                <div class="timeline-btn"><i class="fas fa-step-backward"></i></div>
+                <div class="timeline-btn"><i class="fas fa-backward"></i></div>
+                <div class="timeline-btn"><i class="fas fa-play"></i></div>
+                <div class="timeline-btn"><i class="fas fa-forward"></i></div>
+                <div class="timeline-btn"><i class="fas fa-step-forward"></i></div>
+                <div style="font-size: 13px; margin-left: 10px;">Time Scale: 1.0x</div>
+            </div>
+            <div class="timeline-track"></div>
+        </div>
     </div>
     
     <div class="status-bar">
