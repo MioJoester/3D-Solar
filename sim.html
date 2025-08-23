@@ -121,7 +121,7 @@ const planetData = [
     { name: "Mars", texture: "8k_mars.jpg", size: 0.53, distance: 36.4, speed: 8 },
     { name: "Jupiter", texture: "8k_jupiter.jpg", size: 3.5, distance: 141, speed: 4 },
     { name: "Saturn", texture: "8k_saturn.jpg", size: 2.9, distance: 181, speed: 3, tilt: 5 },
-    { name: "Uranus", texture: "2k_uranus.jpg", size: 2, distance: 281, speed: 2 }
+    { name: "Uranus", texture: "2k_uranus.jpg", size: 2, distance: 381, speed: 2 }
 ];
 
 planetData.forEach(data => {
@@ -151,7 +151,7 @@ controls.dampingFactor = 0.05;
 controls.enablePan = true;
 controls.screenSpacePanning = false;
 controls.minDistance = 5;
-controls.maxDistance = 1000;
+controls.maxDistance = 1500;
 
 // Zoom Focus on Click
 let selectedPlanet = spaceSphere;
@@ -243,6 +243,7 @@ planets.forEach(planet => createOrbit(planet.distance, planet.tilt));
     </script>
 </body>
 </html>
+
 
 
 
